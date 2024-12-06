@@ -221,7 +221,7 @@
         </button>
       </li>
     </ul>
-    
+
     <div id="navbarSearch" class="navbar-search w-100 collapse">
       <input class="form-control w-100 rounded-0 border-0" type="text" placeholder="Search" aria-label="Search">
     </div>
@@ -273,9 +273,9 @@
             <thead>
               <tr>
                 <% ["Carrera", "-A1", "A1", "A2", "B1", "B2", "C1", "C2", "H", "M", "Total"].forEach(element => { %>
-                  <th scope="col">
-                    <%= element %>
-                  </th>
+                <th scope="col">
+                  <%= element %>
+                </th>
                 <% }) %>
               </tr>
             </thead>
@@ -294,6 +294,14 @@
               </tr>
               <% }); %>
             </tbody>
+            <tfoot>
+              <tr>
+                <td>Total</td>
+                <%  footerMock.forEach((fM) => { %>
+                <td><%= fM %></td>
+                <% }); %>
+              </tr>
+            </tfoot>
           </table>
         </div>
 
@@ -303,9 +311,9 @@
             <thead>
               <tr>
                 <% ["Carrera",  "A1", "A2", "B1", "B2", "C1", "C2", "Total"].forEach(element => { %>
-                  <th scope="col">
-                    <%= element %>
-                  </th>
+                <th scope="col">
+                  <%= element %>
+                </th>
                 <% }) %>
               </tr>
             </thead>
@@ -322,36 +330,44 @@
               </tr>
               <% }); %>
             </tbody>
+            <tfoot>
+              <tr>
+                <td>Total</td>
+                <%  footerToefl.forEach((fM) => { %>
+                <td><%= fM %></td>
+                <% }); %>
+              </tr>
+            </tfoot>
           </table>
         </div>
         <h4>Filtros</h4>
         <strong>Estatus de estudiante</strong>
         <form action="/reports" id="status-form" method="get">
           <div class=" form-check">
-            <input class="form-check-input" name="status" type="checkbox" value="ACTIVO" >
+            <input class="form-check-input" name="status" type="checkbox" value="ACTIVO">
             <label class="form-check-label" for="flexCheckDefault">
               Activos
             </label>
           </div>
           <div class=" form-check">
-            <input class="form-check-input" name="status" type="checkbox" value="EGRESADO" >
+            <input class="form-check-input" name="status" type="checkbox" value="EGRESADO">
             <label class="form-check-label" for="flexCheckDefault">
               Egresados
             </label>
           </div>
           <div class=" form-check">
-            <input class="form-check-input" name="status" type="checkbox" value="INDEFINIDO" >
+            <input class="form-check-input" name="status" type="checkbox" value="INDEFINIDO">
             <label class="form-check-label" for="flexCheckDefault">
               Indefinidos
             </label>
           </div>
-      </form>
+        </form>
       </main>
     </div>
   </div>
 
   <script src="/assets/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="/filters.js" ></script>
+  <script src="/filters.js"></script>
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.3.2/dist/chart.umd.js" integrity="sha384-eI7PSr3L1XLISH8JdDII5YN/njoSsxfbrkCTnJrzXt+ENP5MOVBxD+l6sEG4zoLp" crossorigin="anonymous"></script>
 </body>

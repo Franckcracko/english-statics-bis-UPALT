@@ -33,7 +33,7 @@ await db.run(`
     "career" TEXT NOT NULL, -- Cambiado a TEXT si es una carrera escrita
     "status" TEXT NOT NULL,
     "genre" INTEGER NOT NULL,
-    "generation" TEXT NOT NULL,
+    "generation" TEXT,
     "cuatrimester" INTEGER, -- Corregida la ortografía
     "gen_bis" INTEGER,
     "toefl_score" INTEGER,
@@ -81,9 +81,9 @@ app.get("/", async (req, res) => {
       "Generación",
       "Gen. Bis",
       "Puntuación TOEFL",
-      "Calificación TOEFL",
+      "Grado TOEFL",
       "Puntuación MOCK",
-      "Calificación MOCK",
+      "Grado MOCK",
       "Comentarios",
     ],
     tContent,
@@ -139,6 +139,30 @@ app.get("/reports", async (req, res) => {
       arrayStatus
     );
 
+    const totalGradesMock = await db.all(
+      `
+      SELECT 
+      COUNT(*) AS total,
+      mock_grade AS grade
+      FROM students
+      WHERE mock_grade IN ("-A1", "A1", "A2", "B1","B2","C1","C2") AND status IN (${placeholders}) 
+      GROUP BY mock_grade;
+      `,
+      arrayStatus
+    )
+
+    const totalGradesToefl = await db.all(
+      `
+      SELECT 
+      COUNT(1) AS total,
+      toefl_grade AS grade
+      FROM students
+      WHERE toefl_grade IN ("A1", "A2", "B1", "B2", "C1", "C2") AND status IN (${placeholders})
+      GROUP BY toefl_grade;
+      `,
+      arrayStatus
+    )
+
     const totalStudentsInCareer = await db.all(
       `
     SELECT career, genre, COUNT(genre) as totalGenre
@@ -149,6 +173,28 @@ app.get("/reports", async (req, res) => {
     `,
       arrayStatus
     );
+
+    const footerMock = {
+      "-A1": 0,
+      A1: 0,
+      A2: 0,
+      B1: 0,
+      B2: 0,
+      C1: 0,
+      C2: 0
+    }
+    const footerToefl = {
+      A1: 0,
+      A2: 0,
+      B1: 0,
+      B2: 0,
+      C1: 0,
+      C2: 0
+    }
+
+    totalGradesMock.forEach(m => footerMock[m.grade] += m.total)
+    console.log(totalGradesToefl);
+    totalGradesToefl.forEach(m => footerToefl[m.grade] += m.total)
 
     await db.close();
 
@@ -239,7 +285,7 @@ app.get("/reports", async (req, res) => {
         label: "Igeniería Electrónica y Telecomunicaciones",
         ...drillDownToQualifications("IET"),
         ...filterGenreForCareer("IET"),
-      },
+      }
     };
 
     const toefl = {
@@ -264,6 +310,8 @@ app.get("/reports", async (req, res) => {
     res.render("pages/reports", {
       mock,
       toefl,
+      footerMock:Object.entries(footerMock).map(el => el[1]),
+      footerToefl: Object.entries(footerToefl).map(el => el[1])
     });
   } catch (error) {
     console.log(error);
@@ -326,6 +374,7 @@ app.get("/gen-toefl", async (req, res) => {
 
 app.post("/student", async (req, res) => {
   const {
+    id,
     name,
     career,
     status,
@@ -341,6 +390,7 @@ app.post("/student", async (req, res) => {
   } = req.body;
   try {
     if (
+      id === "" ||
       name === "" ||
       career === "" ||
       status === "" ||
@@ -353,8 +403,9 @@ app.post("/student", async (req, res) => {
     }
 
     const db = await openDb();
-    const result = await db.run(
-      "INSERT INTO students (name, career, status, genre, cuatrimester, gen_bis, generation, toefl_score, toefl_grade, mock_score, mock_grade, comments) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+    await db.run(
+      "INSERT INTO students (id, name, career, status, genre, cuatrimester, gen_bis, generation, toefl_score, toefl_grade, mock_score, mock_grade, comments) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+      id,
       name,
       career,
       status,
@@ -370,7 +421,7 @@ app.post("/student", async (req, res) => {
     );
     await db.close();
     res.json({
-      message: "TEst",
+      message: "Agregado correctamente",
     });
   } catch (error) {
     console.log(error);
@@ -382,7 +433,12 @@ app.get("/student", async (req, res) => {
   const { id } = req.query;
   try {
     const db = await openDb();
+    console.log()
     const student = await db.get("SELECT * FROM students WHERE ID = ?", id);
+    console.log(student, id)
+    if(!student){
+      return res.status(404).json({message:"Alumno no encontrado" })
+    }
     await db.close();
     res.render("pages/student", {
       student,
